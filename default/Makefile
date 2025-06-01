@@ -2,21 +2,24 @@ PREFIX=$(subst .kicad_pro,,$(shell ls -1 *.kicad_pro))
 
 all: pcb schematic
 
-schematic: $(PREFIX).kicad_sch.pdf $(PREFIX).kicad_sch.jlc.csv $(PREFIX).kicad_sch.jlc.md
+schematic: $(PREFIX).kicad_sch.pdf $(PREFIX).kicad_sch.jlc.csv $(PREFIX).kicad_sch.jlc.md $(PREFIX).kicad_sch.erc.rpt
 
-pcb: gerbers/$(PREFIX)-Edge_Cuts.gm1 $(PREFIX).kicad_pcb.dxf $(PREFIX).kicad_pcb.3d-top.png $(PREFIX).kicad_pcb.3d-isometric.png
+pcb: gerbers/$(PREFIX)-Edge_Cuts.gm1 $(PREFIX).kicad_pcb.dxf $(PREFIX).kicad_pcb.3d-top.png $(PREFIX).kicad_pcb.3d-isometric.png $(PREFIX).kicad_pcb.drc.rpt
 
 %.kicad_pcb.step : %.kicad_pcb
 	kicad-cli pcb export step --board-only $< -o $@
 
 %.kicad_pcb.dxf : %.kicad_pcb
-	kicad-cli pcb export dxf --layers "Edge.Cuts" $< -o $@
+	kicad-cli pcb export dxf --mode-single --layers "Edge.Cuts" $< -o $@
 
 %.kicad_pcb.3d-isometric.png : %.kicad_pcb
 	kicad-cli pcb render --quality high --rotate '315,0,315' --output $@ $<
 
 %.kicad_pcb.3d-top.png : %.kicad_pcb
 	kicad-cli pcb render --quality high --rotate --output $@ $<
+
+%.kicad_pcb.drc.rpt : %.kicad_pcb
+	kicad-cli pcb drc --severity-all --exit-code-violations --output $@ $<
 
 %.kicad_sch.pdf : %.kicad_sch
 	kicad-cli sch export pdf $< -o $@
@@ -28,6 +31,9 @@ pcb: gerbers/$(PREFIX)-Edge_Cuts.gm1 $(PREFIX).kicad_pcb.dxf $(PREFIX).kicad_pcb
 	head -n1 $< | awk -F'"' '{print "|"$$4"|"$$8"|"$$6"|"$$2"|"}' > $@
 	echo "|--|--|--|--|" >> $@
 	tail -n +2 $< | awk -F\" '{print "|"$$4"|["$$8"](https://jlcpcb.com/partdetail/"$$8")|"$$6"|"$$2"|"}' >> $@
+
+%.kicad_sch.erc.rpt : %.kicad_sch
+	kicad-cli sch erc --severity-all --exit-code-violations --output $@ $<
 
 gerbers/%-Edge_Cuts.gm1 : %.kicad_pcb
 	rm -rf gerbers/

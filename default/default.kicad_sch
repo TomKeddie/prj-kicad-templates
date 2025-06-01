@@ -3,7 +3,7 @@
 	(generator "eeschema")
 	(generator_version "9.0")
 	(uuid "fe76ed7a-c5f3-4f71-8363-f41c05a30a61")
-	(paper "USLetter")
+	(paper "USLedger")
 	(title_block
 		(company "Tom Keddie")
 	)
