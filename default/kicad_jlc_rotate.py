@@ -1,6 +1,11 @@
+import sys
+
+print(sys.path)
+sys.path.append("/usr/lib/python3/dist-packages/")
+print(sys.path)
+
 import pcbnew
 import argparse
-import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--pcbfile", required=True, help="File name of kicad PCB file")

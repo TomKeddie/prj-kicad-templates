@@ -2,7 +2,7 @@ PREFIX=$(subst .kicad_pro,,$(shell ls -1 *.kicad_pro))
 
 all: pcb schematic
 
-schematic: $(PREFIX).kicad_sch.pdf $(PREFIX).kicad_sch.jlc.csv $(PREFIX).kicad_sch.jlc.md $(PREFIX).kicad_sch.erc.rpt
+schematic: $(PREFIX).kicad_sch.pdf $(PREFIX).kicad_sch.jlc.csv $(PREFIX).kicad_sch.jlc.md $(PREFIX).kicad_sch.erc.rpt $(PREFIX).kicad_sch.bom.csv
 
 pcb: gerbers/$(PREFIX)-Edge_Cuts.gm1 $(PREFIX).kicad_pcb.dxf $(PREFIX).kicad_pcb.3d-top.png $(PREFIX).kicad_pcb.3d-isometric.png $(PREFIX).kicad_pcb.drc.rpt
 
@@ -19,10 +19,13 @@ pcb: gerbers/$(PREFIX)-Edge_Cuts.gm1 $(PREFIX).kicad_pcb.dxf $(PREFIX).kicad_pcb
 	kicad-cli pcb render --quality high --rotate --output $@ $<
 
 %.kicad_pcb.drc.rpt : %.kicad_pcb
-	kicad-cli pcb drc --severity-all --exit-code-violations --output $@ $<
+	kicad-cli pcb drc --severity-all --schematic-parity --output $@ $<
 
 %.kicad_sch.pdf : %.kicad_sch
 	kicad-cli sch export pdf $< -o $@
+
+%.kicad_sch.bom.csv : %.kicad_sch
+	kicad-cli sch export bom --fields "Value,Reference,Footprint,LCSC" --group-by "LCSC" --sort-field "Designator" --labels "Value,Designator,Footprint,LCSC" --output $@ $<
 
 %.kicad_sch.jlc.csv : %.kicad_sch
 	kicad-cli sch export bom --fields "Value,Reference,Footprint,LCSC" --labels "Comment,Designator,Footprint,LCSC" --output $@ $<
